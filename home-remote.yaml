@@ -1,0 +1,662 @@
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ESPHOME SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
+esphome:
+  name: home-remote
+  
+  on_boot:
+   then:
+    - wait_until:
+        condition:
+          api.connected: 
+    - display.page.show: page2     
+    
+  on_shutdown:
+    then:
+      - lambda: |-
+          id(oled_display).turn_off();
+
+    
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOARD SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#         
+#board type
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    
+#logger,api,ota    
+api:
+ota:
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> WIFI SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GLOBAL VARIABLES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
+globals:
+ - id: select_pos
+   type: int
+   restore_value: yes
+   initial_value: '0'
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEEP SLEEP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
+deep_sleep:
+  touch_wakeup: true
+  id: deep_sleep_esp
+  
+  #wakes up using the OK button 
+  wakeup_pin:
+    number: GPIO26
+    inverted: true
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> I2C/ TOUCH <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
+#i2c for display
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+  frequency: 800kHz
+  
+#touch for wakeup  
+esp32_touch:
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FONTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
+font:
+
+#media artist font
+  - file: 'fonts/Tahoma Regular font.ttf'
+    id: media_artist_font
+    size: 12
+    glyphs: ['!', '"', '%', '(' ,')', '+', '=', ',', '-', '_', '.' ,':' ,'°' , '0','1','2','3','4','5', 
+             '6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S', 
+             'T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
+             'q','r','s','t','u','v','w','x','y','z','@','&','?','<','>',' ']
+            
+#media title font            
+  - file: 'fonts/Tahoma Regular font.ttf'
+    id: media_title_font
+    size: 14
+    glyphs: ['!', '"', '%', '(' ,')', '+', '=', ',', '-', '_', '.' ,':' ,'°' , '0','1','2','3','4','5', 
+             '6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S', 
+             'T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
+             'q','r','s','t','u','v','w','x','y','z','@','&','?','<','>',' ']
+
+#clock font            
+  - file: 'fonts/BebasNeue-Regular.ttf'
+    id: clock_font
+    size: 48
+
+#media contols font
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: media_font
+    size: 24
+    glyphs: [
+      # media
+      '󰏦', #pause
+      '󰐍', # play
+      '󰙢', #next
+      '󰙤' #back
+      ]
+
+#weather font      
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: weather_font
+    size: 24
+    glyphs: [
+      # Weather
+      "󰖙", # mdi-weather-sunny
+      "󰖔", # mdi-weather-night
+      "󰖐", # mdi-weather-cloudy
+      "󰖖", # mdi-weather-pouring
+      "󰖞", # mdi-weather-windy-variant
+      "󰖑", # mdi-weather-fog
+      "󰼱", # mdi-weather-night-partly-cloudy
+      "󰖕", # mdi-weather-partly-cloudy
+    ]    
+
+#wifi battery font
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: wifi_battery_font
+    size: 14
+    glyphs: [
+      # Weather
+      "󱊣", # battery full
+      "󱊢", # battery med
+      "󱊡", # battery low
+      "󰑫", # wifi
+    ]  
+
+#toggle switch font
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: toggle_switch_font
+    size: 19
+    glyphs: [
+      # Weather
+      "󱊣", # battery full
+      "󱊢", # battery med
+      "󱊡", # battery low
+      "󰑫", # wifi
+      "󰨙", # button off
+      "󰨚"  # button on
+    ]  
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TIME SENSOR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
+time:
+  - platform: homeassistant
+    id: esptime
+    timezone: Asia/Kolkata
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>> BINARY SENOSRS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
+binary_sensor:
+  - platform: esp32_touch
+    name: "Case touch sensor"
+    pin: GPIO14
+    threshold: 750
+    wakeup_threshold: 750
+    internal: true
+    id: touch_pin
+
+  - platform: homeassistant
+    id: prevent_deep_sleep
+    entity_id: input_boolean.remote_wake
+    
+  #Lights and media from home assistant     
+  - platform: homeassistant
+    id: bedroom_lamp
+    entity_id: light.bedroom_lamp
+    internal: true    
+
+  - platform: homeassistant
+    id: bathroom_bulb
+    entity_id: light.bathroom_bulb
+    internal: true  
+
+  - platform: homeassistant
+    id: living_room_bulb
+    entity_id: light.living_room_bulb
+    internal: true  
+
+  - platform: homeassistant
+    id: kitchen_bulb
+    entity_id: light.kitchen_bulb
+    internal: true  
+    
+  - platform: homeassistant
+    id: media_status
+    entity_id: sensor.bedroom_media_status
+    internal: true    
+ 
+
+
+##################################NAVIGATION BUTTONS############################
+ #up button
+
+  - platform: gpio
+    name: "Up"
+    pin:
+      number: GPIO23
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    filters:
+      - delayed_on_off: 10ms 
+    id: up_button   
+    on_press:
+     then:
+      - if:
+          condition:
+            display.is_displaying_page: page3
+          then:
+            - lambda: |-
+                if (id(select_pos) <= 0) 
+                {
+                 id(select_pos) = 3;
+                }          
+                else
+                {
+                  id(select_pos) -= 1;
+                }    
+      - if:
+          condition:
+            display.is_displaying_page: page4
+          then:
+           - homeassistant.service:
+              service: media_player.volume_up
+              data_template:
+                entity_id: media_player.adityas_bedroom
+                
+#down button  
+  - platform: gpio
+    name: "Down"
+    pin:
+      number: GPIO27
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_press:
+     then:
+      - if:
+          condition:
+            display.is_displaying_page: page4
+          then:
+           - homeassistant.service:
+              service: media_player.volume_down
+              data_template:
+                entity_id: media_player.adityas_bedroom
+      - if:
+          condition:
+            display.is_displaying_page: page3
+          then:
+            - lambda: |-
+                if (id(select_pos) >= 3) 
+                {
+                 id(select_pos) = 0;
+                }          
+                else
+                {
+                  id(select_pos) += 1;
+                }
+                
+                
+#right button  
+  - platform: gpio
+    name: "Right"
+    pin:
+      number: GPIO25
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_press:
+     then:
+      - if:
+          condition:
+            display.is_displaying_page: page2
+          then:
+           - homeassistant.service:
+              service: input_select.select_next
+              data_template:
+                entity_id: input_select.scenes
+      - if:
+          condition:
+            display.is_displaying_page: page4
+          then:
+           - homeassistant.service:
+              service: media_player.media_next_track
+              data_template:
+                entity_id: media_player.adityas_bedroom
+
+#left button  
+  - platform: gpio
+    name: "Left"
+    pin:
+      number: GPIO19
+      inverted: true
+      mode:
+        input: true
+        pullup: true   
+    internal: true
+    on_press:
+     then:
+      - if:
+          condition:
+            display.is_displaying_page: page2
+          then:
+           - homeassistant.service:
+              service: input_select.select_previous
+              data_template:
+                entity_id: input_select.scenes
+      - if:
+          condition:
+            display.is_displaying_page: page4
+          then:
+           - homeassistant.service:
+              service: media_player.media_next_previous
+              data_template:
+                entity_id: media_player.adityas_bedroom
+################################################################################
+
+
+############################ SELECT/OK BUTTON  #################################                
+  - platform: gpio
+    name: "Ok"
+    pin:
+      number: GPIO26
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_press:
+     then:
+      - if:
+          condition:
+            display.is_displaying_page: page4
+          then:
+           - homeassistant.service:
+              service: media_player.media_play_pause
+              data_template:
+                entity_id: media_player.adityas_bedroom
+          
+      - if:
+          condition:
+            display.is_displaying_page: page3
+          then:
+           - if:
+              condition:
+                - lambda: |-
+                    if (id(select_pos) ==0) { return 1;}  else {return 0;}
+              then:      
+               - homeassistant.service:
+                  service: light.toggle
+                  data_template:
+                    entity_id: light.bedroom_lamp
+           - if:
+              condition:
+                - lambda: |-
+                    if (id(select_pos) ==1) { return 1;}  else {return 0;}
+              then:      
+               - homeassistant.service:
+                  service: light.toggle
+                  data_template:
+                    entity_id: light.bathroom_bulb
+           - if:
+              condition:
+                - lambda: |-
+                    if (id(select_pos) ==2) { return 1;}  else {return 0;}
+              then:      
+               - homeassistant.service:
+                  service: light.toggle
+                  data_template:
+                    entity_id: light.kitchen_bulb                
+           - if:
+              condition:
+                - lambda: |-
+                    if (id(select_pos) ==3) { return 1;}  else {return 0;}
+              then:      
+               - homeassistant.service:
+                  service: light.toggle
+                  data_template:
+                    entity_id: light.living_room_bulb
+
+######################### PAGE NAVINGATION BUTTONS #############################                    
+#show home page
+#long pressing the HOME button put the device to sleep
+
+  - platform: gpio
+    name: home
+    id: home_button
+    pin:
+      number: GPIO03
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_click:
+    - min_length: 10ms
+      max_length: 800ms
+      then:
+        - display.page.show: page2
+        
+    on_multi_click:
+    - timing:
+        - ON for at least 1s
+      then:    
+        - display.page.show: page5
+        - delay: 1s
+        - deep_sleep.enter: deep_sleep_esp           
+
+#show lights page  
+  - platform: gpio
+    name: lights
+    id: lights_button
+    pin:
+      number: GPIO18
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_press:
+      then:
+        - display.page.show: page3  
+
+#show media page    
+  - platform: gpio
+    name: media
+    id: media_button
+    pin:
+      number: GPIO13
+      inverted: true
+      mode:
+        input: true
+        pullup: true    
+    internal: true
+    on_press:
+      then:
+        - display.page.show: page4
+################################################################################
+
+
+############################# WAKE SLEEP BUTTON ################################                    
+button:
+  - platform: template
+    name: sleep
+    id: sleep_button
+    on_press:
+      then:
+        - deep_sleep.enter: deep_sleep_esp     
+################################################################################
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SENSORS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
+sensor:
+
+  - platform: homeassistant
+    id: inside_temperature
+    entity_id: sensor.bathroom_temperature
+    internal: true
+
+  - platform: homeassistant
+    id: media_volume
+    entity_id: media_player.adityas_bedroom
+    attribute: volume_level
+    internal: true    
+    
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEXT SENSORS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
+text_sensor:
+
+  - platform: homeassistant
+    id: scene
+    entity_id: input_select.scenes
+    internal: true
+    
+  - platform: homeassistant
+    id: media_title
+    entity_id: media_player.adityas_bedroom
+    attribute: media_title
+    internal: true
+
+  - platform: homeassistant
+    id: media_artist
+    entity_id: media_player.adityas_bedroom
+    attribute: media_artist
+    internal: true
+
+  - platform: homeassistant
+    id: weather
+    entity_id: weather.home
+    internal: true    
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DISPLAY <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
+display:
+
+  - platform: ssd1306_i2c
+    model: "SH1106 128x64"
+    address: 0x3C
+    id: oled_display
+    contrast: 65%
+    update_interval: 250ms
+    pages:
+
+############################# INITIAL BLANK PAGE ###############################        
+      - id: page1
+        lambda: |-
+          it.printf(64, 32, id(media_artist_font), TextAlign::TOP_CENTER, "HomeRemote");
+
+
+################################# HOME PAGE ####################################                 
+      - id: page2
+        lambda: |-
+          
+          //Scene display
+          if (id(scene).has_state()) {
+           it.printf(64, 0, id(media_artist_font),TextAlign::TOP_CENTER, "< %s >",to_string(id(scene).state).c_str());
+          }
+
+
+           //wifi
+          it.printf(4, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰑫");
+           
+          //battery
+          it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󱊡");
+          
+          //Weather display
+          if (id(weather).state == "sunny")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖙"); }
+          if (id(weather).state == "night")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖙"); }
+          if (id(weather).state == "cloudy")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖐"); }
+          if (id(weather).state == "pouring")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖖"); }
+          if (id(weather).state == "rainy")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖖"); }
+          if (id(weather).state == "windy")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖞"); }
+          if (id(weather).state == "fog")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖑"); }
+          if (id(weather).state == "night-partly-cloudy")    
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰼱"); }
+          if (id(weather).state == "partly-cloudy")  
+          { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖕"); }
+          
+                     
+
+          
+          // Time
+          it.strftime(0, 60, id(clock_font), TextAlign::BASELINE_LEFT, "%H:%M", id(esptime).now());
+    
+          // Temprature
+          if (id(inside_temperature).has_state()) {
+            it.printf(127, 60, id(media_title_font), TextAlign::BASELINE_RIGHT , "%.1f°", id(inside_temperature).state);
+          }
+
+############################### LIGHTS PAGE ####################################               
+      - id: page3
+        lambda: |-
+          if (id(scene).has_state()) {
+           
+           //Rectangle
+            if (id(select_pos) == 0) 
+            {
+              it.rectangle(0, 0, 127, 17);
+            }
+            if (id(select_pos) == 1) 
+            {
+              it.rectangle(0, 16, 127, 17);
+            }
+            if (id(select_pos) == 2) 
+            {
+              it.rectangle(0, 32, 127, 17);
+            }
+            if (id(select_pos) == 3) 
+            {
+              it.rectangle(0, 46, 127, 17);
+            }
+                
+           //Lamp
+           it.printf(4, 0, id(media_title_font),TextAlign::LEFT, "Bedroom");
+           if(id(bedroom_lamp).state == 1)
+           {
+           it.printf(102, 0, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
+           }
+           else
+          {
+           it.printf(102, 0, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
+           }
+           
+           it.printf(4, 16, id(media_title_font),TextAlign::LEFT, "Bathroom");
+           if(id(bathroom_bulb).state == 1)
+           {
+           it.printf(102, 16, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
+           }
+           else
+          {
+           it.printf(102, 16, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
+           }
+           
+           it.printf(4,31, id(media_title_font),TextAlign::LEFT, "Kitchen");
+           if(id(kitchen_bulb).state == 1)
+           {
+           it.printf(102,31, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
+           }
+           else
+          {
+           it.printf(102, 31, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
+           }
+           
+          it.printf(4, 46, id(media_title_font),TextAlign::LEFT, "Livingroom");
+           if(id(living_room_bulb).state == 1)
+           {
+           it.printf(102, 46, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
+           }
+           else
+          {
+           it.printf(102, 46, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
+           }
+           
+          }
+
+
+################################ MEDIA PAGE ####################################               
+      - id: page4
+        lambda: |-
+          if (id(media_title).has_state()) {
+           it.printf(64, 0, id(media_title_font),TextAlign::TOP_CENTER, "%s",to_string(id(media_title).state).c_str());
+           it.printf(64, 16, id(media_artist_font),TextAlign::TOP_CENTER, "%s",to_string(id(media_artist).state).c_str());
+           
+           it.rectangle(15, 33, 98, 5);
+           it.filled_rectangle(15, 33, (id(media_volume).state*98), 5);
+            
+           it.printf(26, 52, id(media_font),TextAlign::CENTER, "󰙤");
+           it.printf(102, 52, id(media_font),TextAlign::CENTER, "󰙢");
+           if(id(media_status).state == 1)
+           {
+            it.printf(64, 52, id(media_font),TextAlign::CENTER, "󰏦");
+           }
+          else
+          {
+           it.printf(64, 52, id(media_font),TextAlign::CENTER, "󰐍");
+           }
+          }    
+
+
+################################# BOOT PAGE ####################################               
+      - id: page5
+        lambda: |-
+          it.printf(64, 32, id(media_artist_font), TextAlign::TOP_CENTER, "Sleeping...");          
