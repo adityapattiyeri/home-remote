@@ -84,9 +84,9 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 ### Battery:
  I have used a 1000 mAh LiPo battery directly connected to the FireBeetle board. The board comes with built in battery protection circuit.
  
-Your support will help me make more cool projects just like this one :-)
 
-<a href="https://www.buymeacoffee.com/adityapattiyeri" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+<a href="https://www.buymeacoffee.com/adityapattiyeri" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a> 
+Your support will help me make more cool projects just like this one :-)
 
 
 
