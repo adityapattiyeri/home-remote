@@ -14,7 +14,7 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 
 ## Configuration
 
- I have added subtitutions for all the entities so that it is much easier to get everything up and running. The remote currently consists of 3 pages lights, home page and media. Edit the entitiy ids to suit your setup.
+ I have added subtitutions for all the entities so that it is much easier to get everything up and running. The remote currently consists of 3 pages: Lights, Home page and Media. Edit the entitiy ids to suit your setup.
 
 ### Lights
 
