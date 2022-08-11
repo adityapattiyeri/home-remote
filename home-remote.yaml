@@ -14,6 +14,30 @@ esphome:
       - lambda: |-
           id(oled_display).turn_off();
 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUBSTITUTIONS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
+substitutions:
+#Edit the substitutions to match your setup
+
+#Home page
+  temprature_sensor: sensor.bathroom_temperature 
+  weather: weather.home 
+
+  scenes: input_select.scenes
+  
+#Lights
+#Entity ids for lights
+  light_1: light.bedroom_lamp 
+  light_2: light.bathroom_bulb 
+  light_3: light.kitchen_bulb 
+  light_4: light.living_room_bulb
+#Titles for lights
+  light_1_title: Bedroom 
+  light_2_title: Bathroom 
+  light_3_title: Kitchen 
+  light_4_title: Livingroom    
+  
+#Media
+  media: media_player.adityas_bedroom
     
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOARD SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#         
 #board type
@@ -165,29 +189,24 @@ binary_sensor:
     
   #Lights and media from home assistant     
   - platform: homeassistant
-    id: bedroom_lamp
-    entity_id: light.bedroom_lamp
+    id: light_1
+    entity_id: "${light_1}"
     internal: true    
 
   - platform: homeassistant
-    id: bathroom_bulb
-    entity_id: light.bathroom_bulb
+    id: light_2
+    entity_id: "${light_2}"
     internal: true  
 
   - platform: homeassistant
-    id: living_room_bulb
-    entity_id: light.living_room_bulb
+    id: light_3
+    entity_id: "${light_3}"
     internal: true  
 
   - platform: homeassistant
-    id: kitchen_bulb
-    entity_id: light.kitchen_bulb
+    id: light_4
+    entity_id: "${light_4}"
     internal: true  
-    
-  - platform: homeassistant
-    id: media_status
-    entity_id: sensor.bedroom_media_status
-    internal: true    
  
 
 
@@ -228,7 +247,7 @@ binary_sensor:
            - homeassistant.service:
               service: media_player.volume_up
               data_template:
-                entity_id: media_player.adityas_bedroom
+                entity_id: "${media}"
                 
 #down button  
   - platform: gpio
@@ -249,7 +268,7 @@ binary_sensor:
            - homeassistant.service:
               service: media_player.volume_down
               data_template:
-                entity_id: media_player.adityas_bedroom
+                entity_id: "${media}"
       - if:
           condition:
             display.is_displaying_page: page3
@@ -284,7 +303,7 @@ binary_sensor:
            - homeassistant.service:
               service: input_select.select_next
               data_template:
-                entity_id: input_select.scenes
+                entity_id: "${scenes}"
       - if:
           condition:
             display.is_displaying_page: page4
@@ -292,7 +311,7 @@ binary_sensor:
            - homeassistant.service:
               service: media_player.media_next_track
               data_template:
-                entity_id: media_player.adityas_bedroom
+                entity_id: "${media}"
 
 #left button  
   - platform: gpio
@@ -313,7 +332,7 @@ binary_sensor:
            - homeassistant.service:
               service: input_select.select_previous
               data_template:
-                entity_id: input_select.scenes
+                entity_id: "${scenes}"
       - if:
           condition:
             display.is_displaying_page: page4
@@ -321,7 +340,7 @@ binary_sensor:
            - homeassistant.service:
               service: media_player.media_next_previous
               data_template:
-                entity_id: media_player.adityas_bedroom
+                entity_id: "${media}"
 ################################################################################
 
 
@@ -344,7 +363,7 @@ binary_sensor:
            - homeassistant.service:
               service: media_player.media_play_pause
               data_template:
-                entity_id: media_player.adityas_bedroom
+                entity_id: "${media}"
           
       - if:
           condition:
@@ -358,7 +377,7 @@ binary_sensor:
                - homeassistant.service:
                   service: light.toggle
                   data_template:
-                    entity_id: light.bedroom_lamp
+                    entity_id: "${light_1}"
            - if:
               condition:
                 - lambda: |-
@@ -367,7 +386,7 @@ binary_sensor:
                - homeassistant.service:
                   service: light.toggle
                   data_template:
-                    entity_id: light.bathroom_bulb
+                    entity_id: "${light_2}"
            - if:
               condition:
                 - lambda: |-
@@ -376,7 +395,7 @@ binary_sensor:
                - homeassistant.service:
                   service: light.toggle
                   data_template:
-                    entity_id: light.kitchen_bulb                
+                    entity_id: "${light_3}"             
            - if:
               condition:
                 - lambda: |-
@@ -385,7 +404,7 @@ binary_sensor:
                - homeassistant.service:
                   service: light.toggle
                   data_template:
-                    entity_id: light.living_room_bulb
+                    entity_id: "${light_4}"
 
 ######################### PAGE NAVINGATION BUTTONS #############################                    
 #show home page
@@ -464,12 +483,12 @@ sensor:
 
   - platform: homeassistant
     id: inside_temperature
-    entity_id: sensor.bathroom_temperature
+    entity_id: "${temprature_sensor}"
     internal: true
 
   - platform: homeassistant
     id: media_volume
-    entity_id: media_player.adityas_bedroom
+    entity_id: "${media}"
     attribute: volume_level
     internal: true    
     
@@ -480,27 +499,30 @@ text_sensor:
 
   - platform: homeassistant
     id: scene
-    entity_id: input_select.scenes
+    entity_id: "${scenes}"
     internal: true
     
   - platform: homeassistant
     id: media_title
-    entity_id: media_player.adityas_bedroom
+    entity_id: "${media}"
     attribute: media_title
     internal: true
 
   - platform: homeassistant
     id: media_artist
-    entity_id: media_player.adityas_bedroom
+    entity_id: "${media}"
     attribute: media_artist
     internal: true
 
   - platform: homeassistant
     id: weather
-    entity_id: weather.home
+    entity_id: "${weather}"
     internal: true    
 
-
+  - platform: homeassistant
+    id: media_status
+    entity_id: "${media}"
+    internal: true 
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DISPLAY <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 display:
@@ -590,8 +612,8 @@ display:
             }
                 
            //Lamp
-           it.printf(4, 0, id(media_title_font),TextAlign::LEFT, "Bedroom");
-           if(id(bedroom_lamp).state == 1)
+           it.printf(4, 0, id(media_title_font),TextAlign::LEFT, "${light_1_title}");
+           if(id(light_1).state == 1)
            {
            it.printf(102, 0, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
            }
@@ -600,8 +622,8 @@ display:
            it.printf(102, 0, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
            }
            
-           it.printf(4, 16, id(media_title_font),TextAlign::LEFT, "Bathroom");
-           if(id(bathroom_bulb).state == 1)
+           it.printf(4, 16, id(media_title_font),TextAlign::LEFT, "${light_2_title}");
+           if(id(light_2).state == 1)
            {
            it.printf(102, 16, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
            }
@@ -610,8 +632,8 @@ display:
            it.printf(102, 16, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
            }
            
-           it.printf(4,31, id(media_title_font),TextAlign::LEFT, "Kitchen");
-           if(id(kitchen_bulb).state == 1)
+           it.printf(4,31, id(media_title_font),TextAlign::LEFT, "${light_3_title}");
+           if(id(light_3).state == 1)
            {
            it.printf(102,31, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
            }
@@ -620,8 +642,8 @@ display:
            it.printf(102, 31, id(toggle_switch_font),TextAlign::LEFT, "󰨙");
            }
            
-          it.printf(4, 46, id(media_title_font),TextAlign::LEFT, "Livingroom");
-           if(id(living_room_bulb).state == 1)
+          it.printf(4, 46, id(media_title_font),TextAlign::LEFT, "${light_4_title}");
+           if(id(light_4).state == 1)
            {
            it.printf(102, 46, id(toggle_switch_font),TextAlign::LEFT, "󰨚");
            }
@@ -645,7 +667,7 @@ display:
             
            it.printf(26, 52, id(media_font),TextAlign::CENTER, "󰙤");
            it.printf(102, 52, id(media_font),TextAlign::CENTER, "󰙢");
-           if(id(media_status).state == 1)
+           if(id(media_status).state == "playing")
            {
             it.printf(64, 52, id(media_font),TextAlign::CENTER, "󰏦");
            }
