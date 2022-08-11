@@ -14,7 +14,7 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 
 ## Configuration
 
- I have added subtitutions for all the entities so that it is much easier to get everything up and running. Edit entitiy ids to suit you setup.
+ I have added subtitutions for all the entities so that it is much easier to get everything up and running. Edit entitiy ids to suit your setup.
 
 ### Lights
 
@@ -53,7 +53,7 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 
 ### Media
 
- Almost any media player should work.
+ Almost any media player in home assistant should work.
  
 ![media](https://user-images.githubusercontent.com/61015809/184081761-c170ef2b-8aae-4c12-a11a-e940b22eac93.jpg)
 
