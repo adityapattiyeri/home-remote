@@ -81,6 +81,8 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 | 18  | Lights|
 | 13  | Media |
 
+ Pressing the 'Ok' button wakes up the device and long pressing the 'Home' button puts the device to sleep.
+ 
 ### Battery:
  I have used a 1000 mAh LiPo battery directly connected to the FireBeetle board. The board comes with built in battery protection circuit.
  
