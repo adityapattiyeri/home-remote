@@ -7,7 +7,7 @@ esphome:
     - wait_until:
         condition:
           api.connected: 
-    - display.page.show: page2     
+    - display.page.show: page2  
     
   on_shutdown:
     then:
@@ -50,7 +50,6 @@ esp32:
 api:
 ota:
 
-
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> WIFI SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 wifi:
   ssid: !secret wifi_ssid
@@ -66,7 +65,6 @@ globals:
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEEP SLEEP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 deep_sleep:
-  touch_wakeup: true
   id: deep_sleep_esp
   
   #wakes up using the OK button 
@@ -74,18 +72,14 @@ deep_sleep:
     number: GPIO26
     inverted: true
 
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> I2C/ TOUCH <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> I2C <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
 #i2c for display
 i2c:
   sda: 21
   scl: 22
-  scan: true
+  scan: false
   frequency: 800kHz
   
-#touch for wakeup  
-esp32_touch:
-
-
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FONTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
 font:
 
@@ -121,7 +115,7 @@ font:
       '󰏦', #pause
       '󰐍', # play
       '󰙢', #next
-      '󰙤' #back
+      '󰙤'  #back
       ]
 
 #weather font      
@@ -145,23 +139,39 @@ font:
     id: wifi_battery_font
     size: 14
     glyphs: [
-      # Weather
-      "󱊣", # battery full
-      "󱊢", # battery med
-      "󱊡", # battery low
-      "󰑫", # wifi
+      # Battery & wifi
+      "󰁹", # battery 100
+      "󰂂", # battery 90
+      "󰂁", # battery 80
+      "󰂀", # battery 70
+      "󰁿", # battery 60
+      "󰁾", # battery 50  
+      "󰁽", # battery 40
+      "󰁼", # battery 30
+      "󰁻", # battery 20
+      "󰁺", # battery 10      
+      "󰤯", # wifi - 0
+      "󰤟", # wifi - 1 
+      "󰤢", # wifi - 2
+      "󰤥", # wifi - 3
+      "󰤨", # wifi - 4     
+      "󰚥"  # charging
     ]  
 
+#big icon font
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: big_icon_font
+    size: 60
+    glyphs: [
+      "󰚥"  # charging
+    ] 
+    
 #toggle switch font
   - file: 'fonts/materialdesignicons-webfont.ttf'
     id: toggle_switch_font
     size: 19
     glyphs: [
-      # Weather
-      "󱊣", # battery full
-      "󱊢", # battery med
-      "󱊡", # battery low
-      "󰑫", # wifi
+      # Toggle button
       "󰨙", # button off
       "󰨚"  # button on
     ]  
@@ -175,14 +185,19 @@ time:
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>> BINARY SENOSRS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
 binary_sensor:
-  - platform: esp32_touch
-    name: "Case touch sensor"
-    pin: GPIO14
-    threshold: 750
-    wakeup_threshold: 750
-    internal: true
-    id: touch_pin
-
+  #Charger pin
+  - platform: gpio
+    name: "Home Remote Battery State"
+    id: battery_state
+    device_class: battery_charging
+    pin:
+      number: GPIO14
+    on_press:
+      then:
+        - display.page.show: page6
+        - delay: 3s
+        - display.page.show: page2
+        
   - platform: homeassistant
     id: prevent_deep_sleep
     entity_id: input_boolean.remote_wake
@@ -492,8 +507,19 @@ sensor:
     attribute: volume_level
     internal: true    
     
+  - platform: wifi_signal
+    name: "Home Remote WiFi Signal"
+    id: signal_strength
+    update_interval: 30s
 
-
+  - platform: adc
+    pin: 36
+    name: "Home Remote Battery Voltage"
+    id: battery_voltage
+    attenuation: 11dB
+    update_interval: 30s 
+    filters:
+     multiply: 1.44
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEXT SENSORS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 text_sensor:
 
@@ -550,12 +576,59 @@ display:
            it.printf(64, 0, id(media_artist_font),TextAlign::TOP_CENTER, "< %s >",to_string(id(scene).state).c_str());
           }
 
-
+      
            //wifi
-          it.printf(4, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰑫");
-           
+          if (id(signal_strength).state > -50)    
+          { it.printf(6, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰤨"); } 
+          else{
+          if (id(signal_strength).state > -60) 
+          { it.printf(6, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰤥"); } 
+          else{
+          if (id(signal_strength).state > -70) 
+          { it.printf(6, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰤢"); }
+          else{
+          if (id(signal_strength).state > -80) 
+          { it.printf(6, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰤟"); }
+          else{
+          if (id(signal_strength).state > -90) 
+          { it.printf(6, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰤯"); }
+            
+          }}}}
+
           //battery
-          it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󱊡");
+          if (id(battery_voltage).state > 4.11)    
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁹"); } //100
+          else{
+          if (id(battery_voltage).state > 4.02) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰂂"); } //90
+          else{
+          if (id(battery_voltage).state > 3.95) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰂁"); } //80
+          else{
+          if (id(battery_voltage).state > 3.87) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰂀"); } //70
+          else{
+          if (id(battery_voltage).state > 3.84) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁿"); } //60
+          else{
+          if (id(battery_voltage).state > 3.8) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁾"); } //50
+          else{
+          if (id(battery_voltage).state > 3.77) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁽"); } //40
+          else{
+          if (id(battery_voltage).state > 3.73) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁼"); } //30
+          else{
+          if (id(battery_voltage).state > 3.69) 
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁻"); } //20
+          else
+          { it.printf(124, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰁺"); } //10
+          }}}}}}}}
+          
+           //Battery charging state
+           if(id(battery_state).state)
+           { it.printf(114, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰚥"); }
           
           //Weather display
           if (id(weather).state == "sunny")    
@@ -681,4 +754,13 @@ display:
 ################################# BOOT PAGE ####################################               
       - id: page5
         lambda: |-
-          it.printf(64, 32, id(media_artist_font), TextAlign::TOP_CENTER, "Sleeping...");          
+          it.printf(64, 32, id(media_artist_font), TextAlign::TOP_CENTER, "Sleeping...");   
+          
+          
+############################ BATTERY CHARGING PAGE #############################               
+      - id: page6
+        lambda: |-
+          it.printf(64, 32, id(big_icon_font), TextAlign::CENTER, "󰚥");          
+          it.circle(64, 32, 29);
+          it.circle(64, 32, 30);
+          it.circle(64, 32, 31);
