@@ -2,10 +2,10 @@
 
 I have used the FireBeetle ESP32 board along with a LiPo cell to power the device. Modify the code to fit your needs.
 
-## In progress
-1. Battery monitoring
-2. WiFi singal strength icon
-3. Improve documentation
+## Recent changes
+1. Added battery monitoring
+2. Added WiFi singal strength indicator
+3. Added battery charging indicator
 
 ## Future goals
 1. Case
@@ -80,11 +80,13 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 | 03  | Home  | 
 | 18  | Lights|
 | 13  | Media |
+| 36  | Battery voltage  |
+| 14  | Battery charging |
 
  Pressing the 'Ok' button wakes up the device and long pressing the 'Home' button puts the device to sleep.
  
 ### Battery:
- I have used a 1000 mAh LiPo battery directly connected to the FireBeetle board. The board comes with built in battery protection circuit.
+ I have used a 1000 mAh LiPo battery directly connected to the FireBeetle board. The board comes with built in battery protection circuit. Connect a potential divider of value 100K and 220K to the battery to read battery voltage. The charger pin can be connected to pin 14 to read the charging state.
  
 ## Support
 
