@@ -8,6 +8,7 @@ esphome:
         condition:
           api.connected: 
     - display.page.show: page2  
+    - script.execute: auto_sleep_manager
     
   on_shutdown:
     then:
@@ -28,8 +29,8 @@ substitutions:
 #Entity ids for lights
   light_1: light.bedroom_lamp 
   light_2: light.bathroom_bulb 
-  light_3: light.kitchen_bulb 
-  light_4: light.living_room_bulb
+  light_3: light.kitchen_lights
+  light_4: light.living_room_lamp
 #Titles for lights
   light_1_title: Bedroom 
   light_2_title: Bathroom 
@@ -49,12 +50,15 @@ esp32:
 #logger,api,ota    
 api:
 ota:
-
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> WIFI SETUP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
   fast_connect: true
+#  manual_ip:
+#    static_ip: 192.168.0.118
+#    gateway: 192.168.0.1
+#    subnet: 255.255.255.0
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GLOBAL VARIABLES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#   
 globals:
@@ -113,7 +117,7 @@ font:
     glyphs: [
       # media
       '󰏦', #pause
-      '󰐍', # play
+      '󰐍', #play
       '󰙢', #next
       '󰙤'  #back
       ]
@@ -155,15 +159,23 @@ font:
       "󰤢", # wifi - 2
       "󰤥", # wifi - 3
       "󰤨", # wifi - 4     
-      "󰚥"  # charging
+      "󰚥", # charging
     ]  
 
 #big icon font
   - file: 'fonts/materialdesignicons-webfont.ttf'
     id: big_icon_font
-    size: 60
+    size: 30
     glyphs: [
-      "󰚥"  # charging
+      "󰚥", # charging
+    ] 
+
+#big icon font
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: charging_ring_icon_font
+    size: 64
+    glyphs: [
+      "󱥸"  # charging ring
     ] 
     
 #toggle switch font
@@ -176,6 +188,32 @@ font:
       "󰨚"  # button on
     ]  
 
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SCRIPTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
+script:
+  #Auto sleep - sleeps the device if no button press for a while
+  #Change the delay to adjust the cooldown time
+  - id: auto_sleep_manager
+    mode: restart
+    then:
+      - delay: 180s  
+      - if:
+          condition:
+            switch.is_on: auto_sleep
+          then:    
+           - deep_sleep.enter: deep_sleep_esp
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SWITCHES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<# 
+switch:
+  - platform: template
+    name: "Home Remote Auto Sleep"
+    id: auto_sleep
+    restore_state: true
+    optimistic: true
+    on_turn_on:
+     then:
+      - script.execute: auto_sleep_manager
+    
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TIME SENSOR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#       
 time:
   - platform: homeassistant
@@ -201,7 +239,10 @@ binary_sensor:
   - platform: homeassistant
     id: prevent_deep_sleep
     entity_id: input_boolean.remote_wake
-    
+
+  - platform: status
+    name: "Home Remote Status"    
+
   #Lights and media from home assistant     
   - platform: homeassistant
     id: light_1
@@ -242,6 +283,7 @@ binary_sensor:
     id: up_button   
     on_press:
      then:
+      - script.execute: auto_sleep_manager
       - if:
           condition:
             display.is_displaying_page: page3
@@ -276,6 +318,7 @@ binary_sensor:
     internal: true
     on_press:
      then:
+      - script.execute: auto_sleep_manager
       - if:
           condition:
             display.is_displaying_page: page4
@@ -311,6 +354,7 @@ binary_sensor:
     internal: true
     on_press:
      then:
+      - script.execute: auto_sleep_manager
       - if:
           condition:
             display.is_displaying_page: page2
@@ -340,6 +384,7 @@ binary_sensor:
     internal: true
     on_press:
      then:
+      - script.execute: auto_sleep_manager
       - if:
           condition:
             display.is_displaying_page: page2
@@ -371,6 +416,7 @@ binary_sensor:
     internal: true
     on_press:
      then:
+      - script.execute: auto_sleep_manager
       - if:
           condition:
             display.is_displaying_page: page4
@@ -439,6 +485,7 @@ binary_sensor:
     - min_length: 10ms
       max_length: 800ms
       then:
+        - script.execute: auto_sleep_manager  
         - display.page.show: page2
         
     on_multi_click:
@@ -462,6 +509,7 @@ binary_sensor:
     internal: true
     on_press:
       then:
+        - script.execute: auto_sleep_manager
         - display.page.show: page3  
 
 #show media page    
@@ -477,6 +525,7 @@ binary_sensor:
     internal: true
     on_press:
       then:
+        - script.execute: auto_sleep_manager
         - display.page.show: page4
 ################################################################################
 
@@ -484,7 +533,7 @@ binary_sensor:
 ############################# WAKE SLEEP BUTTON ################################                    
 button:
   - platform: template
-    name: sleep
+    name: Home Remote Sleep
     id: sleep_button
     on_press:
       then:
@@ -629,7 +678,8 @@ display:
            //Battery charging state
            if(id(battery_state).state)
            { it.printf(114, 0, id(wifi_battery_font),TextAlign::TOP_CENTER, "󰚥"); }
-          
+
+         
           //Weather display
           if (id(weather).state == "sunny")    
           { it.printf(110, 36, id(weather_font),TextAlign::CENTER, "󰖙"); }
@@ -760,7 +810,5 @@ display:
 ############################ BATTERY CHARGING PAGE #############################               
       - id: page6
         lambda: |-
+          it.printf(64, 32, id(charging_ring_icon_font), TextAlign::CENTER, "󱥸");
           it.printf(64, 32, id(big_icon_font), TextAlign::CENTER, "󰚥");          
-          it.circle(64, 32, 29);
-          it.circle(64, 32, 30);
-          it.circle(64, 32, 31);
