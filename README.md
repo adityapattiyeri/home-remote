@@ -6,6 +6,7 @@ I have used the FireBeetle ESP32 board along with a LiPo cell to power the devic
 1. Added battery monitoring
 2. Added WiFi singal strength indicator
 3. Added battery charging indicator
+4. Added auto sleep feature
 
 ## Future goals
 1. Case
